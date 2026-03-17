@@ -10,6 +10,8 @@ static NimBLECharacteristic* ledSizeChar = nullptr;
 static NimBLECharacteristic* dialog = nullptr;
 static NimBLECharacteristic* dataStream = nullptr;
 
+uint8_t currentMode = 0xF1;
+uint8_t brightness = 200;
 std::string DataStreamPacket = "";
 std::string DialogPacket = "";
 
@@ -35,8 +37,25 @@ class DataStreamCallbacks: public NimBLECharacteristicCallbacks {
 class DialogCallbacks: public NimBLECharacteristicCallbacks {
 	void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
 		(void)connInfo;
-		std::string value = pCharacteristic->getValue();
-		DialogPacket = value;
+		std::string DialogPacket = pCharacteristic->getValue();
+		for (size_t i = 0; i < DialogPacket.length(); ++i) {
+			Serial.print((uint8_t)DialogPacket[i], HEX);
+			Serial.print(" ");
+		}
+		Serial.println();
+		switch (DialogPacket[0]) {
+			case 0xF1:
+				currentMode = 0xF1;
+				break;
+			case 0xF2:
+				currentMode = 0xF2;
+				break;
+			case 0xC0:
+				brightness = uint8_t(DialogPacket[1]);
+				break;
+			default:
+				currentMode = 0xF1;
+		}
 	}
 };
 
@@ -49,11 +68,12 @@ void BLEhandler_init(const String& deviceName, uint8_t NUM_LEDS) {
 	pService = pServer->createService(SERVICE_UUID);
 
 	ledSizeChar = pService->createCharacteristic(LED_SIZE_UUID, NIMBLE_PROPERTY::READ);
-	dialog = pService->createCharacteristic(DIALOG_UUID, NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::NOTIFY);
+	dialog = pService->createCharacteristic(DIALOG_UUID, NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY);
 	dataStream = pService->createCharacteristic(DATASTREAM_UUID, NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::NOTIFY);
 
 	ledSizeChar->setValue(NUM_LEDS);
 
+	dialog->setCallbacks(new DialogCallbacks);
 	dataStream->setCallbacks(new DataStreamCallbacks);
 
 	pService->start();

@@ -1,12 +1,6 @@
-#include <FastLED.h>
+#include "Effects.h"
 #include <vector>
-#include <functional>
-
-struct Effect {
-  const char* name;
-  std::function<void(CRGB*, uint16_t, uint8_t)> func;
-  const uint8_t hexCode;
-};
+#include <cmath>
 
 CRGBPalette16 auroraPalette = CRGBPalette16(
   CRGB(0, 10, 20), CRGB(0, 80, 20), CRGB(0, 180, 60), CRGB(40, 255, 120),
@@ -58,21 +52,21 @@ static void applyBreathPalette(CRGB* leds, uint16_t numLeds, uint8_t breathSpeed
   breath += breathSpeed;
 }
 
-void auroraBreath(CRGB* leds, uint8_t numLeds, uint8_t breathSpeed) {
+void auroraBreath(CRGB* leds, uint16_t numLeds, uint8_t breathSpeed) {
   static uint8_t breath = 0;
   applyBreathPalette(leds, numLeds, breathSpeed, auroraPalette, breath);
 }
 
-void nordicBreath(CRGB* leds, uint8_t numLeds, uint8_t breathSpeed) {
+void nordicBreath(CRGB* leds, uint16_t numLeds, uint8_t breathSpeed) {
   static uint8_t breath = 0;
   applyBreathPalette(leds, numLeds, breathSpeed, nordicPalette, breath);
 }
 
-void fireRunner(CRGB* leds, uint8_t numLeds, uint8_t breathSpeed) {
+void fireRunner(CRGB* leds, uint16_t numLeds, uint8_t breathSpeed) {
   static uint8_t breath = 0;
   applyBreathPalette(leds, numLeds, breathSpeed, campfirePalette, breath);
 }
-void fireEffect(CRGB* leds, uint8_t numLeds, uint16_t effectSpeed) {
+void fireEffect(CRGB* leds, uint16_t numLeds, uint16_t effectSpeed) {
   const int paletteSize = sizeof(firePalette) / sizeof(firePalette[0]);
 
   static std::vector<float> idxs;
@@ -159,8 +153,8 @@ void fireEffect(CRGB* leds, uint8_t numLeds, uint16_t effectSpeed) {
   delay(max<uint16_t>(1, effectSpeed));
 }
 
-Effect effects[] = {
-  {"Aurora",[](CRGB* leds, uint8_t numLeds, uint8_t speed){auroraBreath(leds, numLeds, speed);},0x01},
-  {"Nordic", [](CRGB* leds, uint8_t numLeds, uint8_t speed){nordicBreath(leds, numLeds, speed);}, 0x02},
-  {"CampFire", [](CRGB* leds, uint8_t numLeds, uint8_t speed){fireEffect(leds, numLeds, speed);}, 0x03}
+Effect effects[3] = {
+  {"Aurora",[](CRGB* leds, uint16_t numLeds, uint8_t speed){auroraBreath(leds, numLeds, speed);},0x01},
+  {"Nordic", [](CRGB* leds, uint16_t numLeds, uint8_t speed){nordicBreath(leds, numLeds, speed);}, 0x02},
+  {"CampFire", [](CRGB* leds, uint16_t numLeds, uint8_t speed){fireEffect(leds, numLeds, speed);}, 0x03}
 };

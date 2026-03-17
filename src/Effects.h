@@ -14,6 +14,6 @@ struct Effect {
     const uint8_t hexCode;
 };
 
-extern Effect effects[];
+extern Effect effects[3];
 
 #endif

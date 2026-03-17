@@ -12,9 +12,12 @@
 
 void BLEhandler_init(const String& deviceName, uint8_t NUM_LEDS);
 extern std::string DataStreamPacket;
+extern std::string DialogPacket;
+extern uint8_t currentMode;
+extern uint8_t brightness;
 
 NimBLECharacteristic* BLEhandler_getCharacteristic();
-NimBLECharacteristic* BLEhandler_getModeCharacteristic();
+NimBLECharacteristic* BLEhandler_getDialogCharacteristic();
 NimBLECharacteristic* BLEhandler_getDataCharacteristic();
 
 #endif
