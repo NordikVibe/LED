@@ -1,8 +1,11 @@
 #include <Arduino.h>
+#include <ArduinoOTA.h>
+#include <WiFi.h>
 #include <FastLED.h>
 #include "BLEhandler.h"
 #include "Effects.h"
 #include "misc.h"
+#include "secret.h"
 
 //==========================LED Config==========================
 #define LED_PIN             15
@@ -38,17 +41,39 @@ void sendEffectsList(BLECharacteristic* charPtr) {
 }
 
 void setup() {
+  Serial.begin(115200);
+  Serial.println("=== Boot ===");
+WiFi.mode(WIFI_STA);
+WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+while (WiFi.status() != WL_CONNECTED) { delay(500); }
+
+    ArduinoOTA.setHostname(DEVICE_NAME);
+    ArduinoOTA.setPassword(OTA_PASSWORD);
+    ArduinoOTA.onStart([]() {
+        Serial.println("OTA Start");
+    });
+    ArduinoOTA.onEnd([]() {
+        Serial.println("OTA End, rebooting...");
+    });
+    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+        Serial.printf("Progress: %u%%\r", progress / (total / 100));
+    });
+    ArduinoOTA.onError([](ota_error_t error) {
+        Serial.printf("OTA Error[%u]\n", error);
+    });
+
+    ArduinoOTA.begin();
+
   FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
   FastLED.setBrightness(INIT_BRIGHTNESS);
 
-  Serial.begin(115200);
   BLEhandler_init(DEVICE_NAME, NUM_LEDS);
 
   sendEffectsList(BLEhandler_getDialogCharacteristic());
 }
 
 void loop() {
-  // Smooth brightness change using `fadeBrigtness` from misc.cpp
   displayed_brightness = fadeBrigtness(displayed_brightness, brightness, 1);
   if (displayed_brightness != old_brightness) {
     FastLED.setBrightness(displayed_brightness);
@@ -77,5 +102,6 @@ void loop() {
       }
       break;
   }
+  ArduinoOTA.handle();
   FastLED.show();
 }
